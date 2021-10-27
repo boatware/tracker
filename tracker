@@ -1,0 +1,79 @@
+#!/bin/bash
+
+# Catch Ctrl+C presses and call ctrl_c().
+trap ctrl_c INT
+
+# The filenma ewhere to save tracked times.
+filename=".tracker.csv"
+
+# Start with initial value of 1.
+# The tracker will track as long as this value remains 1.
+track=1
+
+# Determine the start date.
+start=$(date +%Y-%m-%d\ %H:%M:%S)
+
+# Diff is always 0 at start, it will be incremented inside the loop.
+diff=0
+
+# Function that will be called when you press Ctrl+C
+function ctrl_c() {
+  # Set track to 0 to stop the while loop below.
+  track=0
+
+  # Determine the end time.
+  end=$(date +%Y-%m-%d\ %H:%M:%S)
+
+  # Calculate the difference.
+  diff=$(expr $diff + 1)
+  # Calculate hours.
+  hours=$(($diff / 3600))
+  # Format hours.
+  fhours=$(printf %02d $hours)
+  # Calculate minutes.
+  minutes=$((($diff / 60) % 60))
+  # Format minutes.
+  fminutes=$(printf %02d $minutes)
+  # Calculate seconds.
+  seconds=$(($diff % 60))
+  # Format seconds.
+  fseconds=$(printf %02d $seconds)
+
+  # Format elapsed time like 00:00:00.
+  elapsed="$fhours:$fminutes:$fseconds"
+  # Echo total elapsed time.
+  echo -e "\nTotal elapsed: $elapsed";
+
+  # Init comment var as empty string.
+  comment=""
+  # Read the comment.
+  echo -n "Comment: "
+  read comment
+
+  # Write tracked time to csv file.
+  echo "$start,$end,$elapsed,$comment" >> $filename
+  echo "Saved to $filename"
+
+  # Bye bye.
+  exit 0;
+}
+
+# While $track is 1 the loop will continue.
+while [[ $track == 1 ]]; do
+  # Inside this loop the same things happen like in ctrl_c(), but nothing will
+  # be saved to the csv file.
+  end=$(date +%Y-%m-%d\ %H:%M:%S)
+
+  diff=$(expr $diff + 1)
+  hours=$(($diff / 3600))
+  fhours=$(printf %02d $hours)
+  minutes=$((($diff / 60) % 60))
+  fminutes=$(printf %02d $minutes)
+  seconds=$(($diff % 60))
+  fseconds=$(printf %02d $seconds)
+
+  elapsed="$fhours:$fminutes:$fseconds"
+
+  echo -e "\e[1A\e[KElapsed: $elapsed"
+  sleep 1;
+done
